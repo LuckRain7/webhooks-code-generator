@@ -68,18 +68,6 @@
               />
             </a-form-item>
 
-            <a-form-item label="接受请求地址">
-              <a-input
-                v-decorator="[
-                  'url',
-                  {
-                    rules: [{ required: true, message: '请填写接受请求地址' }],
-                  },
-                ]"
-                placeholder="填写接受请求地址"
-              />
-            </a-form-item>
-
             <a-form-item label="端口号">
               <a-input
                 v-decorator="[
@@ -89,6 +77,18 @@
                   },
                 ]"
                 placeholder="填写端口号"
+              />
+            </a-form-item>
+
+            <a-form-item label="接受请求地址">
+              <a-input
+                v-decorator="[
+                  'url',
+                  {
+                    rules: [{ required: true, message: '请填写接受请求地址' }],
+                  },
+                ]"
+                placeholder="填写接受请求地址"
               />
             </a-form-item>
 
@@ -137,6 +137,8 @@
 </template>
 <script>
 import Back from "@/components/common/Back.vue";
+import axios from "axios";
+import ejs from "ejs";
 
 export default {
   components: {
@@ -178,11 +180,9 @@ export default {
       e.preventDefault();
       this.form.validateFields(async (err, values) => {
         if (!err) {
-          const code = await this.$axios.$post("/api/add", values);
-
-          console.log(code);
-
-          this.code = code;
+          const { data } = await axios.get("/template/add.ejs");
+          const res = ejs.render(data, values);
+          this.code = res;
           this.current++;
         }
       });
