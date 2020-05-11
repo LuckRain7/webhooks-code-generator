@@ -176,12 +176,31 @@ export default {
     prev() {
       this.current--;
     },
+    funDownload(content, filename) {
+      var eleLink = document.createElement("a");
+      eleLink.download = filename;
+      eleLink.style.display = "none";
+      // 字符内容转变成blob地址
+      var blob = new Blob([content]);
+      eleLink.href = URL.createObjectURL(blob);
+      // 触发点击
+      document.body.appendChild(eleLink);
+      eleLink.click();
+      // 然后移除
+      document.body.removeChild(eleLink);
+    },
     handleSubmit(e) {
       e.preventDefault();
       this.form.validateFields(async (err, values) => {
         if (!err) {
           const { data } = await axios.get("/template/new.ejs"); // 获取模板字符
-          const res = ejs.render(data, values);
+          const res = ejs.render(data, values); // 使用模板进行整合
+
+          // let formData = new FormData();
+          // formData.append("chunk", res);
+          // formData.append("filename", "index.js");
+          this.funDownload(res, "index.js");
+
           this.code = res;
           this.current++;
         }
