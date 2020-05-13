@@ -180,7 +180,7 @@ export default {
       e.preventDefault();
       this.form.validateFields(async (err, values) => {
         if (!err) {
-          const { data } = await axios.get("/template/add.ejs");
+          const { data } = await axios.get("/webhooks-code-generator/template/add.ejs");
           const res = ejs.render(data, values);
           this.code = res;
           this.current++;

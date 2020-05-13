@@ -202,11 +202,11 @@ export default {
         if (!err) {
           this.res = {};
           // 生成 index.js 代码
-          const indexjs = await axios.get("/template/new.ejs"); // 获取模板字符
+          const indexjs = await axios.get("/webhooks-code-generator/template/new.ejs"); // 获取模板字符
           this.res.indexjs = ejs.render(indexjs.data, values); // 使用模板进行整合
 
           // 生成 package.json 代码
-          const packagejson = await axios.get("/template/package.ejs"); // 获取模板字符
+          const packagejson = await axios.get("/webhooks-code-generator/template/package.ejs"); // 获取模板字符
           this.res.packagejson = JSON.stringify(packagejson.data);
 
           this.code = "点击下载";
