@@ -111,26 +111,19 @@
           <p>解压后进入文件夹</p>
           <p>命令行执行 <span class="red">npm install</span> 安装依赖</p>
           <p>命令行执行 <span class="red">node index.js</span> 启动服务</p>
-          <a-button style="margin-left: 8px" @click="back">
-            跳回首页
-          </a-button>
         </div>
       </transition>
     </div>
     <!-- 按钮 -->
     <div class="steps-action">
-      <a-button v-if="current < steps.length - 1" type="primary" @click="next">
+      <!-- <a-button v-if="current < steps.length - 1" type="primary" @click="next">
         Next
-      </a-button>
-      <a-button
-        v-if="current == steps.length - 1"
-        type="primary"
-        @click="$message.success('Processing complete!')"
-      >
-        Done
+      </a-button> -->
+      <a-button v-if="current == steps.length - 1" type="primary" @click="back">
+        返回首页
       </a-button>
       <a-button v-if="current > 0" style="margin-left: 8px" @click="prev">
-        Previous
+        返回上一页
       </a-button>
     </div>
   </div>
@@ -139,6 +132,7 @@
 import Back from "@/components/common/Back.vue";
 import axios from "axios";
 import ejs from "ejs";
+import ZIP from "jszip";
 export default {
   layout: "basic",
   components: {
@@ -176,39 +170,54 @@ export default {
     prev() {
       this.current--;
     },
-    funDownload(content, filename) {
+    async funDownload(content, filename) {
       var eleLink = document.createElement("a");
       eleLink.download = filename;
       eleLink.style.display = "none";
       // 字符内容转变成blob地址
-      var blob = new Blob([content]);
+
+      // 创建文件并解压
+      const zip = new ZIP();
+      zip.file("package.json", content.packagejson);
+      zip.file("index.js", content.indexjs);
+      const result = await zip.generateAsync({
+        type: "blob", // 浏览器压缩类型
+        compressionOptions: {
+          level: 5, // 压缩级别
+        },
+      });
+
+      const blob = new Blob([result]);
+
       eleLink.href = URL.createObjectURL(blob);
-      // 触发点击
-      document.body.appendChild(eleLink);
+
+      document.body.appendChild(eleLink); // 触发点击
       eleLink.click();
-      // 然后移除
-      document.body.removeChild(eleLink);
+
+      document.body.removeChild(eleLink); // 然后移除
     },
     handleSubmit(e) {
       e.preventDefault();
       this.form.validateFields(async (err, values) => {
         if (!err) {
-          const { data } = await axios.get("/template/new.ejs"); // 获取模板字符
-          const res = ejs.render(data, values); // 使用模板进行整合
+          this.res = {};
+          // 生成 index.js 代码
+          const indexjs = await axios.get("/template/new.ejs"); // 获取模板字符
+          this.res.indexjs = ejs.render(indexjs.data, values); // 使用模板进行整合
 
-          // let formData = new FormData();
-          // formData.append("chunk", res);
-          // formData.append("filename", "index.js");
-          this.funDownload(res, "index.js");
+          // 生成 package.json 代码
+          const packagejson = await axios.get("/template/package.ejs"); // 获取模板字符
+          this.res.packagejson = JSON.stringify(packagejson.data);
 
-          this.code = res;
+          this.code = "点击下载";
           this.current++;
         }
       });
     },
     download() {
       //  下载文件
-      window.open(`/${this.code}`);
+      this.funDownload(this.res, "DEMO.zip");
+
       this.current++;
     },
   },
